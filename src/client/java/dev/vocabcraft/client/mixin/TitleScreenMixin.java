@@ -1,5 +1,6 @@
 package dev.vocabcraft.client.mixin;
 
+import dev.vocabcraft.client.lang.GameLanguage;
 import dev.vocabcraft.client.srs.DeckStore;
 import dev.vocabcraft.client.ui.LanguagePickerScreen;
 import dev.vocabcraft.client.ui.LanguageScreen;
@@ -25,13 +26,16 @@ public abstract class TitleScreenMixin extends Screen {
 	private void vocabcraft$init(CallbackInfo callback) {
 		Minecraft client = Minecraft.getInstance();
 		DeckStore deck = DeckStore.get();
-		if (!deck.hasLanguages()) {
-			LanguagePickerScreen.Role missing = deck.targetLanguage() == null
-				? LanguagePickerScreen.Role.TARGET
-				: LanguagePickerScreen.Role.SUPPORT;
+		String game = client.getLanguageManager().getSelected();
+		if (deck.targetLanguage() == null) {
+			deck.setTargetLanguage(game);
+		} else if (!deck.targetLanguage().equals(game)) {
+			GameLanguage.useAsGameLanguage(client, deck.targetLanguage());
+		}
+		if (deck.supportLanguage() == null) {
 			client.execute(() -> {
 				if (client.gui.screen() instanceof TitleScreen) {
-					client.setScreenAndShow(new LanguagePickerScreen(missing, true));
+					client.setScreenAndShow(new LanguagePickerScreen(LanguagePickerScreen.Role.SUPPORT, true));
 				}
 			});
 			return;

@@ -92,7 +92,7 @@ final class StatsPanel extends AbstractScrollArea {
 		graphics.text(font, caption, x, y, DIM);
 		y += font.lineHeight + 2;
 		if (summary.cards() == 0) {
-			graphics.text(font, "Break, place, or use a block to start.", x, y, LABEL);
+			graphics.text(font, "Break, place, use, craft, or pick something up to start.", x, y, LABEL);
 		} else {
 			String next = summary.nextWaitMs() == 0 ? "due now" : "in " + StudyStats.duration(summary.nextWaitMs());
 			graphics.text(font, "Next card " + next + " · longest memory " + StudyStats.duration(summary.longestIntervalMs()), x, y, LABEL);
@@ -144,6 +144,12 @@ final class StatsPanel extends AbstractScrollArea {
 			graphics.text(font, empty, x, y, DIM);
 			return y + font.lineHeight + 10;
 		}
+		// Title-screen registries exist before item components are bound, and ItemStack rejects that.
+		if (!Items.STONE.builtInRegistryHolder().areComponentsBound()) {
+			String names = ids.stream().map(StatsPanel::shortName).reduce((left, right) -> left + ", " + right).orElse("");
+			int wrap = Math.max(40, getX() + getWidth() - scrollbarWidth() - 8 - x);
+			return graphics.textWithWordWrap(font, Component.literal(names), x, y, wrap, DIM) + 10;
+		}
 		int shown = 0;
 		for (String id : ids) {
 			Item item = item(id);
@@ -160,6 +166,12 @@ final class StatsPanel extends AbstractScrollArea {
 			shown++;
 		}
 		return y + 18 + 8;
+	}
+
+	private static String shortName(String id) {
+		int colon = id.indexOf(':');
+		String path = colon >= 0 ? id.substring(colon + 1) : id;
+		return path.replace('_', ' ');
 	}
 
 	private static Item item(String id) {

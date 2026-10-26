@@ -1,5 +1,6 @@
 package dev.vocabcraft.client.ui;
 
+import dev.vocabcraft.client.lang.GameLanguage;
 import dev.vocabcraft.client.srs.DeckStore;
 
 import java.util.ArrayList;
@@ -93,6 +94,7 @@ public final class LanguagePickerScreen extends Screen {
 		}
 		if (this.role == Role.TARGET) {
 			deck.setTargetLanguage(selected.code);
+			GameLanguage.useAsGameLanguage(this.minecraft, selected.code);
 		} else {
 			deck.setSupportLanguage(selected.code);
 		}

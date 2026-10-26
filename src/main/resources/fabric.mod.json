@@ -3,7 +3,7 @@
 	"id": "vocab-craft",
 	"version": "${version}",
 	"name": "Vocab Craft",
-	"description": "Vibe-coded language reviews for blocks you break, place, or use.",
+	"description": "Vibe-coded language reviews for blocks and items you break, place, use, craft, trade, or pick up.",
 	"authors": ["Linus Vallinder"],
 	"license": "All Rights Reserved",
 	"environment": "*",

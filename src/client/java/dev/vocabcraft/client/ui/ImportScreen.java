@@ -1,6 +1,7 @@
 package dev.vocabcraft.client.ui;
 
 import dev.vocabcraft.VocabCraft;
+import dev.vocabcraft.client.lang.GameLanguage;
 import dev.vocabcraft.client.srs.DeckStore;
 import dev.vocabcraft.srs.DeckFile;
 import dev.vocabcraft.srs.DeckFormatException;
@@ -91,7 +92,13 @@ public final class ImportScreen extends Screen {
 			notice = exception.getMessage();
 			return;
 		}
-		int cards = DeckStore.get().cardCount();
+		DeckStore deck = DeckStore.get();
+		if (deck.targetLanguage() == null) {
+			deck.setTargetLanguage(this.minecraft.getLanguageManager().getSelected());
+		} else {
+			GameLanguage.useAsGameLanguage(this.minecraft, deck.targetLanguage());
+		}
+		int cards = deck.cardCount();
 		this.minecraft.setScreenAndShow(new LanguageScreen("Imported " + cards + " cards.", LanguageScreen.SUCCESS));
 	}
 

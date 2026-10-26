@@ -3,7 +3,14 @@
 	"package": "dev.vocabcraft.client.mixin",
 	"compatibilityLevel": "JAVA_21",
 	"client": [
+		"ClientPacketListenerMixin",
+		"FurnaceResultSlotMixin",
+		"ItemCombinerResultMixin",
+		"LanguageManagerMixin",
+		"MerchantResultSlotMixin",
 		"MultiPlayerGameModeMixin",
+		"ResultSlotMixin",
+		"StonecutterResultMixin",
 		"TitleScreenMixin"
 	],
 	"injectors": {
