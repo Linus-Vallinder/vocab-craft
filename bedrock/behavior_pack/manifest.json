@@ -1,0 +1,30 @@
+{
+	"format_version": 2,
+	"header": {
+		"name": "Vocab Craft",
+		"description": "Vibe-coded language-learning addon shell. No gameplay yet.",
+		"uuid": "26fe61fd-4035-4f87-acbd-3072dd52e790",
+		"version": [1, 0, 0],
+		"min_engine_version": [1, 26, 50]
+	},
+	"modules": [
+		{
+			"type": "data",
+			"uuid": "aeb587bb-4ee2-4966-b445-fd7ab18aea26",
+			"version": [1, 0, 0]
+		},
+		{
+			"type": "script",
+			"language": "javascript",
+			"uuid": "766c1a91-acda-4462-a361-38ba37924e45",
+			"entry": "scripts/main.js",
+			"version": [1, 0, 0]
+		}
+	],
+	"dependencies": [
+		{
+			"module_name": "@minecraft/server",
+			"version": "2.10.0"
+		}
+	]
+}

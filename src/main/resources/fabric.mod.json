@@ -1,0 +1,30 @@
+{
+	"schemaVersion": 1,
+	"id": "vocab-craft",
+	"version": "${version}",
+	"name": "Vocab Craft",
+	"description": "Vibe-coded language reviews for blocks you break, place, or use.",
+	"authors": ["Linus Vallinder"],
+	"license": "All Rights Reserved",
+	"environment": "*",
+	"entrypoints": {
+		"main": [
+			"dev.vocabcraft.VocabCraft"
+		],
+		"client": [
+			"dev.vocabcraft.client.VocabCraftClient"
+		]
+	},
+	"mixins": [
+		{
+			"config": "vocab-craft.client.mixins.json",
+			"environment": "client"
+		}
+	],
+	"depends": {
+		"fabricloader": ">=0.20.1",
+		"minecraft": "~26.3",
+		"java": ">=25",
+		"fabric-api": "*"
+	}
+}
