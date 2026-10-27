@@ -24,6 +24,10 @@ Needs JDK 25. Versions are pinned in `gradle.properties`.
 
 The jar is `build/libs/vocab-craft-0.1.0.jar`. `./gradlew runClient` launches a development client.
 
+## Download
+
+A push to `main` runs the tests, builds the jar, and publishes a beta on Modrinth. That page is where to install the latest build. Publishing starts after the GitHub repo has a `MODRINTH_TOKEN` secret and a `MODRINTH_PROJECT_ID` variable. Until then, the built jar is attached to the Actions run.
+
 ## Layout
 
 | Path | What it is |
