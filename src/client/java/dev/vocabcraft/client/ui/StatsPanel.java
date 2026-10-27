@@ -1,5 +1,6 @@
 package dev.vocabcraft.client.ui;
 
+import dev.vocabcraft.client.lang.ItemNames;
 import dev.vocabcraft.client.srs.DeckStore;
 import dev.vocabcraft.client.study.BlockCatalog;
 import dev.vocabcraft.srs.StudyStats;
@@ -11,12 +12,15 @@ import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.components.AbstractScrollArea;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
+import net.minecraft.core.Holder;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
+import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.item.SpawnEggItem;
 
 final class StatsPanel extends AbstractScrollArea {
 	private static final int SHAKY = 0xFFE85D4C;
@@ -32,6 +36,7 @@ final class StatsPanel extends AbstractScrollArea {
 	private static final String[] SCHEDULE = {"Now", "10m", "1h", "Later"};
 	private static final int[] SCHEDULE_COLORS = {0xFFE8A838, 0xFF7EB6FF, 0xFF5B8DEF, 0xFF6E8B90};
 	private static final int[] EASE_COLORS = {0xFF3DDC97, 0xFF7ED67A, 0xFFC6D35A, 0xFFE6C229, 0xFFF0A202, 0xFFE37B3A, SHAKY};
+	private static final String ENTITY_PREFIX = "entity:";
 
 	private int contentHeight = 1;
 
@@ -160,7 +165,11 @@ final class StatsPanel extends AbstractScrollArea {
 			ItemStack stack = item.getDefaultInstance();
 			if (mouseX >= ix && mouseX < ix + 16 && mouseY >= y && mouseY < y + 16 && isMouseOver(mouseX, mouseY)) {
 				graphics.fill(ix - 1, y - 1, ix + 17, y + 17, 0x40FFFFFF);
-				graphics.setTooltipForNextFrame(font, stack, mouseX, mouseY);
+				if (id.startsWith(ENTITY_PREFIX)) {
+					graphics.setTooltipForNextFrame(font, Component.literal(entityLabel(id)), mouseX, mouseY);
+				} else {
+					graphics.setTooltipForNextFrame(font, stack, mouseX, mouseY);
+				}
 			}
 			graphics.item(stack, ix, y);
 			shown++;
@@ -169,18 +178,46 @@ final class StatsPanel extends AbstractScrollArea {
 	}
 
 	private static String shortName(String id) {
-		int colon = id.indexOf(':');
-		String path = colon >= 0 ? id.substring(colon + 1) : id;
+		String body = id.startsWith(ENTITY_PREFIX) ? id.substring(ENTITY_PREFIX.length()) : id;
+		int colon = body.indexOf(':');
+		String path = colon >= 0 ? body.substring(colon + 1) : body;
 		return path.replace('_', ' ');
 	}
 
+	private static String entityLabel(String id) {
+		EntityType<?> type = entityType(id.substring(ENTITY_PREFIX.length()));
+		if (type == null) {
+			return shortName(id);
+		}
+		String code = DeckStore.get().targetLanguage();
+		if (code == null) {
+			return shortName(id);
+		}
+		return ItemNames.entityName(type, code);
+	}
+
 	private static Item item(String id) {
+		if (id.startsWith(ENTITY_PREFIX)) {
+			EntityType<?> type = entityType(id.substring(ENTITY_PREFIX.length()));
+			if (type == null) {
+				return Items.AIR;
+			}
+			return SpawnEggItem.byId(type).map(Holder::value).orElse(Items.AIR);
+		}
 		Identifier key = Identifier.tryParse(id);
 		if (key == null) {
 			return Items.AIR;
 		}
 		Item item = BuiltInRegistries.ITEM.getValue(key);
 		return item == null ? Items.AIR : item;
+	}
+
+	private static EntityType<?> entityType(String id) {
+		Identifier key = Identifier.tryParse(id);
+		if (key == null || !BuiltInRegistries.ENTITY_TYPE.containsKey(key)) {
+			return null;
+		}
+		return BuiltInRegistries.ENTITY_TYPE.getValue(key);
 	}
 
 	private static void bar(GuiGraphicsExtractor graphics, int x, int y, int width, int height, int[] counts, int[] colors) {

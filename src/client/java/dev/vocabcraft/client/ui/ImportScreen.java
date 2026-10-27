@@ -20,11 +20,13 @@ import net.minecraft.network.chat.Component;
 public final class ImportScreen extends Screen {
 	private static final int ERROR = 0xFFFFAAAA;
 
+	private final Screen parent;
 	private EditBox pathBox;
 	private String notice = "";
 
-	public ImportScreen() {
+	public ImportScreen(Screen parent) {
 		super(Component.literal("Import progress"));
+		this.parent = parent;
 	}
 
 	@Override
@@ -99,7 +101,7 @@ public final class ImportScreen extends Screen {
 			GameLanguage.useAsGameLanguage(this.minecraft, deck.targetLanguage());
 		}
 		int cards = deck.cardCount();
-		this.minecraft.setScreenAndShow(new LanguageScreen("Imported " + cards + " cards.", LanguageScreen.SUCCESS));
+		this.minecraft.setScreenAndShow(new LanguageScreen(this.parent, "Imported " + cards + " cards.", LanguageScreen.SUCCESS));
 	}
 
 	@Override
@@ -120,6 +122,6 @@ public final class ImportScreen extends Screen {
 
 	@Override
 	public void onClose() {
-		this.minecraft.setScreenAndShow(new LanguageScreen());
+		this.minecraft.setScreenAndShow(new LanguageScreen(this.parent));
 	}
 }

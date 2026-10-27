@@ -14,6 +14,11 @@ public final class ReviewMath {
 		return card == null || now >= card.dueAt();
 	}
 
+	/** A card that has been seen and not graded yet. */
+	public static CardState fresh(long now) {
+		return new CardState(START_EASE, 0, 0L, now, 0, 0);
+	}
+
 	public static CardState grade(CardState card, boolean correct, long now) {
 		double ease = card == null ? START_EASE : card.ease();
 		int reps = card == null ? 0 : card.reps();

@@ -37,13 +37,19 @@ public final class LanguagePickerScreen extends Screen {
 
 	private final Role role;
 	private final boolean required;
+	private final Screen parent;
 	private LanguageList list;
 	private String notice = "";
 
 	public LanguagePickerScreen(Role role, boolean required) {
+		this(role, required, null);
+	}
+
+	public LanguagePickerScreen(Role role, boolean required, Screen parent) {
 		super(Component.literal(role.title));
 		this.role = role;
 		this.required = required;
+		this.parent = parent;
 	}
 
 	@Override
@@ -99,14 +105,14 @@ public final class LanguagePickerScreen extends Screen {
 			deck.setSupportLanguage(selected.code);
 		}
 		if (this.required && this.role == Role.TARGET) {
-			this.minecraft.setScreenAndShow(new LanguagePickerScreen(Role.SUPPORT, true));
+			this.minecraft.setScreenAndShow(new LanguagePickerScreen(Role.SUPPORT, true, this.parent));
 			return;
 		}
 		if (this.required) {
 			this.minecraft.setScreenAndShow(new TitleScreen());
 			return;
 		}
-		this.minecraft.setScreenAndShow(new LanguageScreen());
+		this.minecraft.setScreenAndShow(new LanguageScreen(this.parent));
 	}
 
 	@Override
@@ -130,7 +136,7 @@ public final class LanguagePickerScreen extends Screen {
 	@Override
 	public void onClose() {
 		if (!this.required) {
-			this.minecraft.setScreenAndShow(new LanguageScreen());
+			this.minecraft.setScreenAndShow(new LanguageScreen(this.parent));
 		}
 	}
 

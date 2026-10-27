@@ -5,10 +5,12 @@
 	"client": [
 		"ClientPacketListenerMixin",
 		"FurnaceResultSlotMixin",
+		"GuiMixin",
 		"ItemCombinerResultMixin",
 		"LanguageManagerMixin",
 		"MerchantResultSlotMixin",
 		"MultiPlayerGameModeMixin",
+		"PauseScreenMixin",
 		"ResultSlotMixin",
 		"StonecutterResultMixin",
 		"TitleScreenMixin"

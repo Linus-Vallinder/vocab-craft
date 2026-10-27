@@ -4,16 +4,20 @@ import dev.vocabcraft.VocabCraft;
 import dev.vocabcraft.srs.CardState;
 import dev.vocabcraft.srs.DeckData;
 import dev.vocabcraft.srs.DeckFile;
+import dev.vocabcraft.srs.QueueAdmit;
 import dev.vocabcraft.srs.ReviewMath;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 
@@ -25,6 +29,9 @@ public final class DeckStore {
 	private String targetLanguage;
 	private String supportLanguage;
 	private final Map<String, CardState> cards = new LinkedHashMap<>();
+	private final List<String> queue = new ArrayList<>();
+	private String newDay;
+	private int newCount;
 
 	public static DeckStore get() {
 		if (instance == null) {
@@ -64,8 +71,49 @@ public final class DeckStore {
 		save();
 	}
 
+	public List<String> queue() {
+		return Collections.unmodifiableList(queue);
+	}
+
+	public int queueSize() {
+		return queue.size();
+	}
+
+	public boolean queued(String itemId) {
+		return queue.contains(itemId);
+	}
+
+	public String peekQueue() {
+		return queue.isEmpty() ? null : queue.get(0);
+	}
+
+	public void dequeue(String itemId) {
+		if (queue.remove(itemId)) {
+			save();
+		}
+	}
+
+	/** @return true when this call introduced the card. */
+	public boolean enqueue(String itemId, long now, int maxPending, int dailyLimit) {
+		rollDay();
+		boolean known = cards.containsKey(itemId);
+		QueueAdmit.Result result = QueueAdmit.decide(known, queue.contains(itemId), queue.size(), maxPending, newCount, dailyLimit);
+		if (!result.enqueue()) {
+			return false;
+		}
+		if (result.introduce()) {
+			cards.put(itemId, ReviewMath.fresh(now));
+			newCount++;
+		}
+		queue.add(itemId);
+		save();
+		return result.introduce();
+	}
+
 	public void resetCards() {
 		cards.clear();
+		queue.clear();
+		newCount = 0;
 		save();
 	}
 
@@ -75,7 +123,7 @@ public final class DeckStore {
 	}
 
 	public DeckData snapshot() {
-		return new DeckData(targetLanguage, supportLanguage, new LinkedHashMap<>(cards));
+		return new DeckData(targetLanguage, supportLanguage, new LinkedHashMap<>(cards), new ArrayList<>(queue), newDay, newCount);
 	}
 
 	public Path exportFile() throws IOException {
@@ -166,6 +214,18 @@ public final class DeckStore {
 		supportLanguage = data.supportLanguage();
 		cards.clear();
 		cards.putAll(data.cards());
+		queue.clear();
+		queue.addAll(data.queue());
+		newDay = data.newDay();
+		newCount = data.newCount();
+	}
+
+	private void rollDay() {
+		String today = LocalDate.now().toString();
+		if (!today.equals(newDay)) {
+			newDay = today;
+			newCount = 0;
+		}
 	}
 
 	private void save() {

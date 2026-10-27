@@ -2,6 +2,7 @@ package dev.vocabcraft.srs;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
@@ -11,7 +12,9 @@ import java.nio.file.AtomicMoveNotSupportedException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 public final class DeckFile {
@@ -45,6 +48,15 @@ public final class DeckFile {
 			cards.add(entry.getKey(), json);
 		}
 		root.add("cards", cards);
+		JsonArray queue = new JsonArray();
+		for (String id : data.queue()) {
+			queue.add(id);
+		}
+		root.add("queue", queue);
+		if (data.newDay() != null) {
+			root.addProperty("newDay", data.newDay());
+		}
+		root.addProperty("newCount", data.newCount());
 		return GSON.toJson(root);
 	}
 
@@ -78,7 +90,14 @@ public final class DeckFile {
 			}
 			cards.put(id, card(id, entry.getValue().getAsJsonObject()));
 		}
-		return new DeckData(textOrNull(root.get("targetLanguage")), textOrNull(root.get("supportLanguage")), cards);
+		return new DeckData(
+			textOrNull(root.get("targetLanguage")),
+			textOrNull(root.get("supportLanguage")),
+			cards,
+			queueOf(root, cards),
+			textOrNull(root.get("newDay")),
+			optionalCount(root, "newCount")
+		);
 	}
 
 	public static void writeAtomically(Path path, String text) throws IOException {
@@ -90,6 +109,47 @@ public final class DeckFile {
 		} catch (AtomicMoveNotSupportedException exception) {
 			Files.move(temporary, path, StandardCopyOption.REPLACE_EXISTING);
 		}
+	}
+
+	private static List<String> queueOf(JsonObject root, Map<String, CardState> cards) {
+		JsonElement element = root.get("queue");
+		if (element == null || element.isJsonNull()) {
+			return List.of();
+		}
+		if (!element.isJsonArray()) {
+			throw new DeckFormatException("Progress queue is invalid.");
+		}
+		List<String> queue = new ArrayList<>();
+		for (JsonElement entry : element.getAsJsonArray()) {
+			if (!entry.isJsonPrimitive() || !entry.getAsJsonPrimitive().isString()) {
+				continue;
+			}
+			String id = entry.getAsString();
+			if (!validId(id) || !cards.containsKey(id) || queue.contains(id)) {
+				continue;
+			}
+			queue.add(id);
+		}
+		return queue;
+	}
+
+	private static int optionalCount(JsonObject root, String field) {
+		JsonElement element = root.get(field);
+		if (element == null || element.isJsonNull()) {
+			return 0;
+		}
+		if (!element.isJsonPrimitive() || !element.getAsJsonPrimitive().isNumber()) {
+			throw new DeckFormatException(field + " is invalid.");
+		}
+		double value = element.getAsDouble();
+		if (value != Math.rint(value) || value < 0 || value > Integer.MAX_VALUE) {
+			throw new DeckFormatException(field + " is invalid.");
+		}
+		return (int) value;
+	}
+
+	private static boolean validId(String id) {
+		return !id.isBlank() && id.length() <= 256 && !hasWhitespace(id);
 	}
 
 	private static void formatOf(JsonObject root) {
