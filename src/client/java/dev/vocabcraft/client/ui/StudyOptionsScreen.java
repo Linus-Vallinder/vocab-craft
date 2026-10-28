@@ -16,6 +16,7 @@ public final class StudyOptionsScreen extends Screen {
 	private static final int[] COOLDOWNS = {0, 10, 30, 60, 120};
 	private static final int[] DAILY = {0, 5, 10, 20, 50};
 	private static final int[] PENDING = {0, 10, 20, 50, 100};
+	private static final int[] REVIEW_AT = {0, 5, 10, 20};
 
 	private final Screen parent;
 
@@ -42,6 +43,8 @@ public final class StudyOptionsScreen extends Screen {
 		body.addChild(button(inner, "Pause notices while swimming: " + onOff(settings.suppressSwimming()), button -> settings.toggleSuppressSwimming()));
 		body.addChild(button(inner, "Daily new cards: " + cap(settings.dailyNew()), button -> settings.setDailyNew(next(DAILY, settings.dailyNew()))));
 		body.addChild(button(inner, "Pending cap: " + cap(settings.maxPending()), button -> settings.setMaxPending(next(PENDING, settings.maxPending()))));
+		body.addChild(button(inner, "Review in bed: " + onOff(settings.reviewInBed()), button -> settings.toggleReviewInBed()));
+		body.addChild(button(inner, "Open review at: " + cards(settings.reviewAt()), button -> settings.setReviewAt(next(REVIEW_AT, settings.reviewAt()))));
 		body.addChild(new StringWidget(Component.literal("Review key: " + VocabCraftClient.REVIEW.getTranslatedKeyMessage().getString()), this.font));
 		body.addChild(Button.builder(CommonComponents.GUI_DONE, button -> onClose()).width(inner).build());
 		layout.addToContents(body);
@@ -66,6 +69,10 @@ public final class StudyOptionsScreen extends Screen {
 
 	private static String cap(int value) {
 		return value == 0 ? "no cap" : Integer.toString(value);
+	}
+
+	private static String cards(int value) {
+		return value == 0 ? "off" : value + " cards";
 	}
 
 	private static int next(int[] values, int current) {

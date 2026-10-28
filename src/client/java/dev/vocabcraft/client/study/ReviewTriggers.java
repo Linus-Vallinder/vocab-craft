@@ -5,6 +5,7 @@ import dev.vocabcraft.client.lang.ItemNames;
 import dev.vocabcraft.client.srs.DeckStore;
 import dev.vocabcraft.client.ui.ReviewScreen;
 import dev.vocabcraft.srs.ReviewMath;
+import dev.vocabcraft.srs.ReviewPrompt;
 
 import com.mojang.blaze3d.platform.InputConstants;
 
@@ -16,6 +17,7 @@ import java.util.Set;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.EditBox;
+import net.minecraft.client.gui.screens.InBedChatScreen;
 import net.minecraft.client.gui.screens.PauseScreen;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
@@ -58,6 +60,8 @@ public final class ReviewTriggers {
 	private static String pendingNotice;
 	private static long lastNoticeAt;
 	private static boolean reviewWasDown;
+	private static boolean pileLatched;
+	private static boolean offeredThisSleep;
 
 	private ReviewTriggers() {
 	}
@@ -91,6 +95,7 @@ public final class ReviewTriggers {
 		presentFind();
 		flushNotice();
 		pollReviewKey();
+		offerReviews();
 	}
 
 	public static void openSession(Screen parent) {
@@ -405,6 +410,36 @@ public final class ReviewTriggers {
 		}
 		pendingNotice = null;
 		lastNoticeAt = now;
+	}
+
+	private static void offerReviews() {
+		Minecraft client = Minecraft.getInstance();
+		if (client.player == null) {
+			pileLatched = false;
+			offeredThisSleep = false;
+			return;
+		}
+		StudySettings settings = StudySettings.get();
+		Screen screen = client.gui.screen();
+		boolean sleeping = client.player.isSleeping();
+		ReviewPrompt.Step step = ReviewPrompt.step(
+			settings.reviewInBed(),
+			DeckStore.get().queueSize(),
+			settings.reviewAt(),
+			pileLatched,
+			screen == null && !settings.suppressed(client.player),
+			sleeping,
+			screen instanceof InBedChatScreen,
+			offeredThisSleep,
+			screen instanceof ReviewScreen
+		);
+		pileLatched = step.latched();
+		offeredThisSleep = step.offeredSleep();
+		if (!step.openBed() && !step.openReady()) {
+			return;
+		}
+		// Replacing the bed screen calls removed(), which does not send STOP_SLEEPING.
+		openSession(null);
 	}
 
 	private static void pollReviewKey() {

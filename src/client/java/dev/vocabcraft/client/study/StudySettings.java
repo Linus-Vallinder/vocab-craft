@@ -27,6 +27,8 @@ public final class StudySettings {
 	private boolean suppressSwimming = true;
 	private int dailyNew = 0;
 	private int maxPending = 0;
+	private boolean reviewInBed = true;
+	private int reviewAt = 10;
 
 	public static StudySettings get() {
 		if (instance == null) {
@@ -71,6 +73,14 @@ public final class StudySettings {
 		return maxPending;
 	}
 
+	public boolean reviewInBed() {
+		return reviewInBed;
+	}
+
+	public int reviewAt() {
+		return reviewAt;
+	}
+
 	public void toggleQueueMode() {
 		queueMode = !queueMode;
 		save();
@@ -108,6 +118,16 @@ public final class StudySettings {
 
 	public void setMaxPending(int limit) {
 		maxPending = Math.max(0, limit);
+		save();
+	}
+
+	public void toggleReviewInBed() {
+		reviewInBed = !reviewInBed;
+		save();
+	}
+
+	public void setReviewAt(int cards) {
+		reviewAt = Math.max(0, cards);
 		save();
 	}
 
@@ -156,6 +176,8 @@ public final class StudySettings {
 			settings.suppressSwimming = bool(root, "suppressSwimming", true);
 			settings.dailyNew = count(root, "dailyNew", 0);
 			settings.maxPending = count(root, "maxPending", 0);
+			settings.reviewInBed = bool(root, "reviewInBed", true);
+			settings.reviewAt = count(root, "reviewAt", 10);
 		} catch (RuntimeException | IOException exception) {
 			VocabCraft.LOGGER.warn("Could not read Vocab Craft settings, using defaults", exception);
 			return new StudySettings();
@@ -173,6 +195,8 @@ public final class StudySettings {
 		root.addProperty("suppressSwimming", suppressSwimming);
 		root.addProperty("dailyNew", dailyNew);
 		root.addProperty("maxPending", maxPending);
+		root.addProperty("reviewInBed", reviewInBed);
+		root.addProperty("reviewAt", reviewAt);
 		try {
 			DeckFile.writeAtomically(path(), GSON.toJson(root));
 		} catch (IOException exception) {
